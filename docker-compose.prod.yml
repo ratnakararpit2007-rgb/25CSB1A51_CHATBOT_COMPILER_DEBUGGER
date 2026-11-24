@@ -1,0 +1,57 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: cppdbg-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:11434/api/tags || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ollama-model-pull:
+    image: curlimages/curl:latest
+    container_name: cppdbg-model-pull
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["sh", "-c", "curl -X POST http://ollama:11434/api/pull -d '{\"name\": \"llama3\"}'"]
+    restart: "no"
+
+  sandbox-builder:
+    image: docker:cli
+    container_name: cppdbg-sandbox-builder
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/workspace
+    working_dir: /workspace
+    entrypoint: ["sh", "-c", "docker build -t cpp-debug-sandbox:latest -f Dockerfile ."]
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    container_name: cppdbg-web-app
+    ports:
+      - "8501:8501"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./system_interactions.json:/app/system_interactions.json
+    environment:
+      - OLLAMA_URL=http://ollama:11434/api/generate
+      - OLLAMA_MODEL=llama3
+      - SANDBOX_IMAGE=cpp-debug-sandbox:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+      sandbox-builder:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  ollama_data:

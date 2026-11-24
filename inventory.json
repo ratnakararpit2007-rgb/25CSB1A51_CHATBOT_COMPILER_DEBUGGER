@@ -1,0 +1,79 @@
+{
+  "system": "Agentic AI Multi-Language Compiler & Debugger",
+  "version": "1.0.0",
+  "security_spec": "Supply Chain & Tool/Server Inventory (Area 9)",
+  "components": [
+    {
+      "name": "python_runtime",
+      "category": "runtime",
+      "source": "CPython 3.14.5",
+      "path": ".venv/bin/python3",
+      "permissions": ["read_project", "execute_subprocess"],
+      "network": "restricted",
+      "sandboxed": true
+    },
+    {
+      "name": "clang_cpp_compiler",
+      "category": "compiler",
+      "source": "Apple Clang / LLVM",
+      "binary": "clang++",
+      "permissions": ["read_source", "write_binary_sandbox"],
+      "network": "none",
+      "sandboxed": true
+    },
+    {
+      "name": "gcc_c_compiler",
+      "category": "compiler",
+      "source": "Apple Clang / GCC",
+      "binary": "clang",
+      "permissions": ["read_source", "write_binary_sandbox"],
+      "network": "none",
+      "sandboxed": true
+    },
+    {
+      "name": "lldb_debugger",
+      "category": "debugger",
+      "source": "Apple LLDB / LLVM",
+      "binary": "lldb",
+      "permissions": ["inspect_debug_symbols", "read_registers"],
+      "network": "none",
+      "sandboxed": true
+    },
+    {
+      "name": "ollama_llm_inference",
+      "category": "llm_backend",
+      "source": "Ollama Local Service",
+      "endpoint": "http://127.0.0.1:11434",
+      "permissions": ["generate_tool_call"],
+      "network": "localhost_only",
+      "sandboxed": false
+    },
+    {
+      "name": "gemini_api",
+      "category": "llm_backend",
+      "source": "Google Generative AI",
+      "endpoint": "https://generativelanguage.googleapis.com",
+      "permissions": ["generate_tool_call"],
+      "network": "external_https",
+      "sandboxed": false
+    },
+    {
+      "name": "docker_sandbox",
+      "category": "isolation",
+      "source": "Docker Engine",
+      "image": "multi-lang-sandbox:latest",
+      "permissions": ["isolated_container_exec"],
+      "network": "none",
+      "sandboxed": true
+    }
+  ],
+  "mcp_and_plugins": {
+    "auto_load_untrusted": false,
+    "require_authentication": true,
+    "allowlist": [
+      "builtin.multi_language_compiler",
+      "builtin.lldb_debugger",
+      "builtin.audit_logger"
+    ]
+  }
+}
